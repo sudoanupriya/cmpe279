@@ -9,7 +9,7 @@
 #include <netinet/in.h>
 #include <string.h>
 
-#define PORT 80
+#define PORT 8080
 int main(int argc, char const *argv[])
 {
     int server_fd, new_socket, valread;
@@ -20,14 +20,6 @@ int main(int argc, char const *argv[])
     char *hello = "Hello from server";
 
     printf("execve=0x%p\n", execve);
-
-    // Initialize process ID's
-
-    pid_t child_pid, pid;
-
-    // Initialize pointer of passwd structure which provides information about user account
-
-    struct passwd *pwd;
 
     // Creating socket file descriptor
     if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0)
@@ -65,6 +57,12 @@ int main(int argc, char const *argv[])
         perror("accept");
         exit(EXIT_FAILURE);
     }
+
+    // privilege seperation
+        
+    pid_t child_pid, pid;
+
+    struct passwd *pwd;
     child_pid = fork();
     if (child_pid < 0)
     {
@@ -79,8 +77,10 @@ int main(int argc, char const *argv[])
             perror("unable to find UID");
             exit(EXIT_FAILURE);
         }
+        printf("Before dropping preivileges\t");
+        printf("pid: %d\n", pid);
         pid = setuid(pwd->pw_uid);
-
+        printf("After dropping preivileges\t");
         printf("pid: %d\n", pid);
 
         if (pid != 0)
@@ -96,11 +96,11 @@ int main(int argc, char const *argv[])
     else if (child_pid > 0)
     {
 
-        printf("Parent process is waiting for child process to finish...\n");
+        printf("...parent process is waiting for child process to finish\n");
         int status = 0;
         while ((wait(&status)) > 0)
             ;
-        printf("Parent process has completed successfully...");
+        printf("...parent process has completed successfully\n");
     }
 
     return 0;
